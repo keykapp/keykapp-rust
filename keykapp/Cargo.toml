@@ -1,5 +1,5 @@
 [package]
-name = "hid-proxy"
+name = "keykapp"
 version = "0.1.0"
 authors = ["Helder S Ribeiro <git@agentofuser.com>"]
 edition = "2018"

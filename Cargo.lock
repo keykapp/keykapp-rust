@@ -185,15 +185,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
 
 [[package]]
-name = "hid-proxy"
-version = "0.1.0"
-dependencies = [
- "commitlog",
- "rdev",
- "serde_cbor",
-]
-
-[[package]]
 name = "inotify"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -211,6 +202,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e05c02b5e89bff3b946cedeca278abc628fe811e604f027c45a8aa3cf793d0eb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "keykapp"
+version = "0.1.0"
+dependencies = [
+ "commitlog",
+ "rdev",
+ "serde_cbor",
 ]
 
 [[package]]
