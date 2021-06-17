@@ -1,6 +1,23 @@
+// use commitlog::message::*;
 use commitlog::*;
 use rdev::{grab, Event, EventType};
 use std::error::Error;
+
+// fn print_log() {
+//     // open a directory called 'log' for segment and index storage
+//     let opts = LogOptions::new("log");
+//     let log = CommitLog::new(opts).unwrap();
+
+//     // read the messages
+//     let messages = log.read(0, ReadLimit::max_bytes(usize::MAX)).unwrap();
+//     for msg in messages.iter() {
+//         println!(
+//             "{} - {:#?}",
+//             msg.offset(),
+//             serde_cbor::from_reader::<Event, &[u8]>(msg.payload())
+//         );
+//     }
+// }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let grab_keyboard = |event: Event| {
