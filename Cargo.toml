@@ -1,6 +1,3 @@
 [workspace]
 
-members = [
-    "hid-proxy",
-]
-
+members = ["hid-proxy"]

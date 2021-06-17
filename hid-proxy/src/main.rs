@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             // EventType::KeyRelease(Key::Tab) => None,
             EventType::KeyPress(_) | EventType::KeyRelease(_) => {
                 log.append_msg(
-                    serde_json::to_string(&event)
+                    serde_cbor::to_vec(&event)
                         .expect("Could not serialize event."),
                 )
                 .expect("Could not log serialized event.");
