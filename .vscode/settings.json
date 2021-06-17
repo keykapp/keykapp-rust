@@ -15,5 +15,9 @@
     "titleBar.inactiveBackground": "#402d7a99",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
-  "peacock.color": "#402d7a"
+  "peacock.color": "#402d7a",
+  "editor.defaultFormatter": "rust-lang.rust",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "evenBetterToml.formatter.columnWidth": 79
 }
