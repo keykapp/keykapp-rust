@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rdev = { version="0.5.1", features=["unstable_grab", "serialize"] }
+rdev = { path="../rdev", features=["unstable_grab", "serialize"] }
 commitlog = "0.1"
 serde_cbor = "0.11"

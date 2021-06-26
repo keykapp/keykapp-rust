@@ -1,7 +1,25 @@
 use commitlog::message::*;
 use commitlog::*;
+use rdev::EventType::*;
 use rdev::{grab, Event, EventType};
+use std::collections::HashMap;
 use std::error::Error;
+use std::u32;
+
+struct KeyEvent {
+    pub name: Option<String>,
+    pub event_type: EventType,
+}
+
+enum Item<T> {
+    Collection(Vec<Item<T>>),
+    Value(T),
+}
+
+struct AppState {
+    event_log: Vec<Event>,
+    ngram_counts: HashMap<Item<KeyEvent>, u32>,
+}
 
 fn read_event_log() -> Vec<Event> {
     // open a directory called 'log' for segment and index storage
@@ -20,15 +38,18 @@ fn read_event_log() -> Vec<Event> {
     events
 }
 
-static mut EVENT_LOG: Vec<Event> = Vec::new();
-
 fn main() -> Result<(), Box<dyn Error>> {
-    unsafe {
-        EVENT_LOG = read_event_log();
-        println!("EVENT_LOG.len() -> {}", EVENT_LOG.len());
-    }
+    let event_log: Vec<Event> = Vec::new();
+    let ngram_counts: HashMap<Item<KeyEvent>, u32> = HashMap::new();
+    let mut app_state = AppState {
+        event_log,
+        ngram_counts,
+    };
 
-    let grab_keyboard = |event: Event| {
+    app_state.event_log = read_event_log();
+    println!("event_log.len() -> {}", app_state.event_log.len());
+
+    let event_loop = move |event: Event| {
         // open a directory called 'log' for segment and index storage
         let opts = LogOptions::new("log");
         let mut log = CommitLog::new(opts).unwrap();
@@ -40,16 +61,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .expect("Could not serialize event."),
                 )
                 .expect("Could not log serialized event.");
-                unsafe {
-                    EVENT_LOG.push(event.clone());
-                    println!("EVENT_LOG.len() -> {}", EVENT_LOG.len());
-                }
+
+                app_state.event_log.push(event.clone());
+                println!("event_log.len() -> {}", app_state.event_log.len());
+
                 Some(event)
             }
             _ => Some(event),
         }
     };
 
-    grab(grab_keyboard).expect("Could not grab");
+    grab(event_loop).expect("Could not grab keyboard event.");
     Ok(())
 }
