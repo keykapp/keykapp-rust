@@ -1,3 +1,4 @@
 debug/
 target/
 log
+.DS_Store

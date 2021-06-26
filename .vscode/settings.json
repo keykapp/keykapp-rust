@@ -19,5 +19,8 @@
   "editor.defaultFormatter": "rust-lang.rust",
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
-  "evenBetterToml.formatter.columnWidth": 79
+  "evenBetterToml.formatter.columnWidth": 79,
+  "[rust]": {
+    "editor.defaultFormatter": "matklad.rust-analyzer"
+  }
 }
