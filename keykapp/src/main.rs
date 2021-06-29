@@ -1,15 +1,15 @@
 use commitlog::message::*;
 use commitlog::*;
+use priority_queue::PriorityQueue;
 use rdev::simulate;
 use rdev::EventType::*;
 use rdev::Key;
 use rdev::{grab, Event, EventType};
 use std::cmp::min;
-use std::collections::HashMap;
 use std::error::Error;
 use std::u32;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 
 enum KeyEventType {
     KeyPress(Key),
@@ -25,7 +25,7 @@ impl KeyEventType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct KeyEvent {
     event_type: KeyEventType,
 }
@@ -45,7 +45,7 @@ impl KeyEvent {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 enum KeyEventSexp {
     List(Vec<KeyEventSexp>),
     Atom(KeyEvent),
@@ -53,7 +53,7 @@ enum KeyEventSexp {
 
 struct AppState {
     event_log: Vec<Event>,
-    ngram_counts: HashMap<KeyEventSexp, u32>,
+    ngram_counts: PriorityQueue<KeyEventSexp, u32>,
 }
 
 fn read_event_log() -> Vec<Event> {
@@ -75,7 +75,7 @@ fn read_event_log() -> Vec<Event> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let event_log: Vec<Event> = Vec::new();
-    let ngram_counts: HashMap<KeyEventSexp, u32> = HashMap::new();
+    let ngram_counts: PriorityQueue<KeyEventSexp, u32> = PriorityQueue::new();
     let mut app_state = AppState {
         event_log,
         ngram_counts,
@@ -100,14 +100,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                 app_state.event_log.push(event.clone());
 
                 // increment ngrams with current event as suffix
+                // LATER: create and use a Sexp (kapp) log instead of the event
+                // log and use the kapp log tail to learn ngrams from
+                // for now, since we're just proxying, these two are the same
+                // LATER: move into function and use on log loaded on startup.
+                let event_log = &app_state.event_log;
+                let ngrams = &mut app_state.ngram_counts;
                 let ngram_length_max_global = 3;
                 let ngram_length_max_current =
                     min(app_state.event_log.len(), ngram_length_max_global);
                 for i in (0..ngram_length_max_current).into_iter() {
-                    // ngrams[log[(-i)..=(-1)].map(|e| KeyEvent::from(e))]++
-                    let event_log = &app_state.event_log;
-                    let mut ngrams = &app_state.ngram_counts;
-
                     let ngram: Vec<KeyEventSexp> = event_log
                         [(event_log.len() - i - 1)..(event_log.len())]
                         .into_iter()
@@ -115,26 +117,36 @@ fn main() -> Result<(), Box<dyn Error>> {
                             KeyEventSexp::Atom(KeyEvent::from(e).unwrap())
                         })
                         .collect();
-                    let item: KeyEventSexp = KeyEventSexp::List(ngram);
-                    match ngrams.get(&item) {
-                        Some(count) => {
-                            // println!("{:#?}", count);
-                        }
-                        None => {
-                            // println!("None");
-                        }
-                    }
+                    // note: here single-kapp items are also added as a List
+                    // rather than an Atom, which is fine for now but good to
+                    // keep in mind.
+                    let item = KeyEventSexp::List(ngram);
+                    ngrams.push_increase(
+                        item.clone(),
+                        ngrams.get_priority(&item).unwrap_or(&0)
+                            + i as u32
+                            + 1,
+                    );
                 }
 
-                // use incoming key event to pick (if any) a corresponding outgoing key event (dummy pass-through for now)
+                // use incoming key event to pick (if any) a corresponding
+                // outgoing key event (dummy pass-through for now)
                 if let KeyEventSexp::Atom(key_event) =
                     KeyEventSexp::Atom(KeyEvent::from(&event).unwrap())
                 {
                     let event_type =
                         KeyEventType::to_event_type(key_event.event_type);
 
-                    println!("{:#?}", &event_type);
                     simulate(&event_type).unwrap();
+
+                    // TODO: replace `println!` with concise representation (by
+                    // implementing `Display`?)
+                    ngrams.clone().into_sorted_iter().take(1).for_each(
+                        |(sexp, count)| println!("{:#?}: {}", &sexp, count),
+                    );
+                    // what planet is this?
+                    // what is your name?
+                    // what is your quest?
 
                     None
                 } else {

@@ -10,3 +10,4 @@ edition = "2018"
 rdev = { path="../rdev", features=["unstable_grab", "serialize"] }
 commitlog = "0.1"
 serde_cbor = "0.11"
+priority-queue = { version="1.1.1", features=["serde"] }
