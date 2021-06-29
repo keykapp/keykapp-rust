@@ -56,21 +56,45 @@ struct AppState {
     ngram_counts: PriorityQueue<KeyEventSexp, u32>,
 }
 
-fn read_event_log() -> Vec<Event> {
+// increment ngrams with current event as suffix. LATER: create and use a Sexp
+// (kapp) log instead of the event log and use the kapp log tail to learn
+// ngrams from for now, since we're just proxying, these two are the same
+fn update_ngrams_from_log_tail(app_state: &mut AppState) {
+    let event_log = &app_state.event_log;
+    let ngrams = &mut app_state.ngram_counts;
+    let ngram_length_max_global = 8;
+    let ngram_length_max_current =
+        min(app_state.event_log.len(), ngram_length_max_global);
+    for i in (0..ngram_length_max_current).into_iter() {
+        let ngram: Vec<KeyEventSexp> = event_log
+            [(event_log.len() - i - 1)..(event_log.len())]
+            .into_iter()
+            .map(|e| KeyEventSexp::Atom(KeyEvent::from(e).unwrap()))
+            .collect();
+        // note: here single-kapp items are also added as a List
+        // rather than an Atom, which is fine for now but good to
+        // keep in mind.
+        let item = KeyEventSexp::List(ngram);
+        ngrams.push_increase(
+            item.clone(),
+            ngrams.get_priority(&item).unwrap_or(&0) + i as u32 + 1,
+        );
+    }
+}
+
+fn load_app_state_from_event_log(app_state: &mut AppState) {
     // open a directory called 'log' for segment and index storage
     let opts = LogOptions::new("log");
     let log = CommitLog::new(opts).unwrap();
 
     // read the messages
     let messages = log.read(0, ReadLimit::max_bytes(usize::MAX)).unwrap();
-    let events: Vec<Event> = messages
-        .iter()
-        .map(|message| {
-            serde_cbor::from_reader::<Event, &[u8]>(message.payload())
-                .expect("Could not deserialize event from log message.")
-        })
-        .collect();
-    events
+    messages.iter().for_each(|message| {
+        let event = serde_cbor::from_reader::<Event, &[u8]>(message.payload())
+            .expect("Could not deserialize event from log message.");
+        app_state.event_log.push(event);
+        update_ngrams_from_log_tail(app_state);
+    });
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -81,7 +105,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ngram_counts,
     };
 
-    app_state.event_log = read_event_log();
+    load_app_state_from_event_log(&mut app_state);
 
     let event_loop = move |event: Event| {
         // open a directory called 'log' for segment and index storage
@@ -99,35 +123,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 app_state.event_log.push(event.clone());
 
-                // increment ngrams with current event as suffix
-                // LATER: create and use a Sexp (kapp) log instead of the event
-                // log and use the kapp log tail to learn ngrams from
-                // for now, since we're just proxying, these two are the same
-                // LATER: move into function and use on log loaded on startup.
-                let event_log = &app_state.event_log;
-                let ngrams = &mut app_state.ngram_counts;
-                let ngram_length_max_global = 3;
-                let ngram_length_max_current =
-                    min(app_state.event_log.len(), ngram_length_max_global);
-                for i in (0..ngram_length_max_current).into_iter() {
-                    let ngram: Vec<KeyEventSexp> = event_log
-                        [(event_log.len() - i - 1)..(event_log.len())]
-                        .into_iter()
-                        .map(|e| {
-                            KeyEventSexp::Atom(KeyEvent::from(e).unwrap())
-                        })
-                        .collect();
-                    // note: here single-kapp items are also added as a List
-                    // rather than an Atom, which is fine for now but good to
-                    // keep in mind.
-                    let item = KeyEventSexp::List(ngram);
-                    ngrams.push_increase(
-                        item.clone(),
-                        ngrams.get_priority(&item).unwrap_or(&0)
-                            + i as u32
-                            + 1,
-                    );
-                }
+                update_ngrams_from_log_tail(&mut app_state);
 
                 // use incoming key event to pick (if any) a corresponding
                 // outgoing key event (dummy pass-through for now)
@@ -141,12 +137,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     // TODO: replace `println!` with concise representation (by
                     // implementing `Display`?)
+                    let ngrams = &app_state.ngram_counts;
+                    println!("---------- choose your adventure ----------");
                     ngrams.clone().into_sorted_iter().take(1).for_each(
                         |(sexp, count)| println!("{:#?}: {}", &sexp, count),
                     );
-                    // what planet is this?
-                    // what is your name?
-                    // what is your quest?
 
                     None
                 } else {
