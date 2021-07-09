@@ -9,5 +9,6 @@ edition = "2018"
 [dependencies]
 rdev = { path="../rdev", features=["unstable_grab", "serialize"] }
 commitlog = "0.1"
+serde = "1.0.126"
 serde_cbor = "0.11"
 priority-queue = { version="1.1.1", features=["serde"] }

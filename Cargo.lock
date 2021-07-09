@@ -263,6 +263,7 @@ dependencies = [
  "commitlog",
  "priority-queue",
  "rdev",
+ "serde",
  "serde_cbor",
 ]
 

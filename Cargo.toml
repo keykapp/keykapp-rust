@@ -1,3 +1,6 @@
 [workspace]
 
 members = ["keykapp", "rdev"]
+
+[profile.release]
+debug = 2
