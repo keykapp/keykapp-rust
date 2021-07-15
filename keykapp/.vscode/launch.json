@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      // Running executables
+      {
+          "type": "lldb",
+          "request": "launch",
+          "name": "Run Keykapp",
+          "program": "${workspaceFolder}/.build/debug/keykapp",
+          "args": [],
+          "cwd": "${workspaceFolder}/",
+          "preLaunchTask": "swift-build"
+      },
+  ]
+}

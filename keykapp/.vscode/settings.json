@@ -1,0 +1,22 @@
+{
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#e495d5",
+    "activityBar.activeBorder": "#6d7f20",
+    "activityBar.background": "#e495d5",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#6d7f20",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "statusBar.background": "#d96dc5",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.hoverBackground": "#ce45b5",
+    "titleBar.activeBackground": "#d96dc5",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#d96dc599",
+    "titleBar.inactiveForeground": "#15202b99"
+  },
+  "peacock.color": "#d96dc5",
+  "sourcekit-lsp.serverPath": "/Library/Developer/Toolchains/swift-5.4.2-RELEASE.xctoolchain/usr/bin/sourcekit-lsp",
+  "sde.languageServerMode": "sourcekit-lsp",
+  "lldb.library": "/Library/Developer/Toolchains/swift-5.4.2-RELEASE.xctoolchain/System/Library/PrivateFrameworks/LLDB.framework/Versions/A/LLDB",
+}
