@@ -4,6 +4,3 @@
 [submodule "enigo"]
 	path = enigo
 	url = git@github.com:keykapp/enigo.git
-[submodule "autopilot-rs"]
-	path = autopilot-rs
-	url = git@github.com:keykapp/autopilot-rs.git
