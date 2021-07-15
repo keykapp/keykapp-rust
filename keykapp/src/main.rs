@@ -1,17 +1,26 @@
 use commitlog::message::*;
 use commitlog::*;
 use core::time;
+use core_graphics::event::CGKeyCode;
+use core_graphics::event::{
+    CGEvent, CGEventFlags, CGEventTapLocation, CGEventType, EventField,
+};
 use priority_queue::PriorityQueue;
+use rdev::_grab::CGEventTapCallbackArgs;
+use rdev::macos::keycodes::key_from_code;
+use rdev::macos::*;
 use rdev::simulate;
+use rdev::Event;
+use rdev::EventType;
 use rdev::EventType::*;
 use rdev::Key;
 use rdev::Key::*;
-use rdev::{grab, Event, EventType};
 use serde::{Deserialize, Serialize};
 use std::cmp::min;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::convert::TryInto;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -229,7 +238,7 @@ const KEYSWITCHES: [Key; 8] =
 fn update_ngrams_from_log_tail(app_state: &mut AppState) {
     let kapp_log = &app_state.kapp_log;
     let ngram_length_max_global = 32;
-    let ngram_length_min_global = 1;
+    let ngram_length_min_global = 4;
     let ngram_length_max_current =
         min(app_state.kapp_log.len(), ngram_length_max_global);
     for ngram_length in
@@ -289,23 +298,58 @@ fn load_app_state_from_log(app_state: &mut AppState) {
 fn main() -> Result<(), Box<dyn Error>> {
     let mut app_state = AppState::new();
 
-    load_app_state_from_log(&mut app_state);
-    recompute_derived_data_if_needed(&mut app_state);
-    render_ui(&app_state);
+    // load_app_state_from_log(&mut app_state);
+    // recompute_derived_data_if_needed(&mut app_state);
+    // render_ui(&app_state);
     app_state.is_interactive = true;
 
-    let event_loop = move |incoming_event: Event| {
-        let event = incoming_event.clone();
+    let event_loop = move |incoming_event: CGEventTapCallbackArgs| {
+        let cg_event = incoming_event.cg_event.clone();
 
-        let outgoing_event = reduce(&mut app_state, incoming_event);
+        println!("---- begin: CGEventTapCallbackArgs ----");
+        println!("type:\t\t\t{:#?}", cg_event.get_type());
+        println!("flags:\t\t\t{:#?}", cg_event.get_flags());
 
-        perform_effects(&mut app_state);
+        let keycode: Option<CGKeyCode> = cg_event
+            .get_integer_value_field(EventField::KEYBOARD_EVENT_KEYCODE)
+            .try_into()
+            .ok();
+        println!("keycode:\t\t{:#?}", keycode);
 
-        if should_ui_rerender(&app_state, &event) {
-            render_ui(&app_state);
-        }
+        let key: Option<Key> =
+            keycode.map(|keycode: CGKeyCode| key_from_code(keycode));
+        println!("key:\t\t\t{:#?}", key);
 
-        outgoing_event
+        // 0 for false, anything else for true
+        let autorepeat: i64 = cg_event
+            .get_integer_value_field(EventField::KEYBOARD_EVENT_AUTOREPEAT);
+        println!("autorepeat:\t\t{:#?}", autorepeat);
+
+        let keyboard_type: i64 = cg_event
+            .get_integer_value_field(EventField::KEYBOARD_EVENT_KEYBOARD_TYPE);
+        println!("keyboard_type:\t\t{:#?}", keyboard_type);
+
+        let field_name = "EVENT_SOURCE_GROUP_ID";
+        let field_id = EventField::EVENT_SOURCE_GROUP_ID;
+        let field_value: i64 = cg_event.get_integer_value_field(field_id);
+        println!("{}:\t{:#?}", field_name, field_value);
+
+        // TODO: CGEventTimestamp
+        // TODO: CGEventKeyboardGetUnicodeString
+
+        println!("---- end: CGEventTapCallbackArgs ----\n");
+        std::io::stdout().flush().unwrap();
+
+        let outgoing_event = incoming_event;
+        // let outgoing_event = reduce(&mut app_state, incoming_event);
+
+        // perform_effects(&mut app_state);
+
+        // if should_ui_rerender(&app_state, &event) {
+        //     render_ui(&app_state);
+        // }
+
+        Some(outgoing_event)
     };
 
     grab(event_loop).expect("Could not grab keyboard event.");
@@ -324,7 +368,7 @@ fn perform_effects(app_state: &mut AppState) -> () {
     while let Some(effect) = app_state.pending_effects.pop_front() {
         match effect {
             Effect::Simulate(event_type) => {
-                simulate(&event_type).expect("Could not simulate event.");
+                simulate(&event_type, &[]).expect("Could not simulate event.");
                 thread::sleep(delay);
             }
         }
