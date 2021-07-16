@@ -8,8 +8,9 @@
           "name": "Run Keykapp",
           "program": "${workspaceFolder}/.build/debug/keykapp",
           "args": [],
-          "cwd": "${workspaceFolder}/",
-          "preLaunchTask": "swift-build"
+          // "cwd": "${workspaceFolder}/",
+          // "preLaunchTask": "swift-build",
+          "stopOnEntry": true
       },
   ]
 }
