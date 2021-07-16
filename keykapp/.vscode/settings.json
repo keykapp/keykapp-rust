@@ -19,4 +19,6 @@
   "sourcekit-lsp.serverPath": "/Library/Developer/Toolchains/swift-5.4.2-RELEASE.xctoolchain/usr/bin/sourcekit-lsp",
   "sde.languageServerMode": "sourcekit-lsp",
   "lldb.library": "/Library/Developer/Toolchains/swift-5.4.2-RELEASE.xctoolchain/System/Library/PrivateFrameworks/LLDB.framework/Versions/A/LLDB",
+  "editor.defaultFormatter": "vknabel.vscode-swiftformat",
+  "swiftformat.enable": true,
 }

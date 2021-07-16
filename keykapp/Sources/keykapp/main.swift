@@ -1,6 +1,5 @@
-import Cocoa
+import System
 
-let place: String = "world"
-let num = 5
-
-print("Hi \(num), \(place)!")
+let logPath: FilePath = "/tmp/keykapp.log"
+let fd = try FileDescriptor.open(logPath, .writeOnly, options: .append)
+try fd.closeAfter { try fd.writeAll("hello world\n".utf8) }
